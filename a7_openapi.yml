@@ -1,0 +1,239 @@
+openapi: 3.0.0
+
+info:
+ version: '1.0'
+ title: 'LBAW Sportium Web API'
+ description: 'Web Resources Specification (A7) for Sportium'
+
+servers:
+- url: http://lbaw.fe.up.pt
+  description: Production server
+
+externalDocs:
+ description: Find more info here.
+ url: https://web.fe.up.pt/~ssn/wiki/teach/lbaw/sportium/a07
+
+tags:
+ - name: 'M01: Authentication and Individual Profile'
+ - name: 'M02: Posts'
+ - name: 'M03: Comments'
+ - name: 'M04: Follows'
+ - name: 'M05: User Administration and Static pages'
+
+paths:
+ /login:
+   get:
+     operationId: R101
+     summary: 'R101: Login Form'
+     description: 'Provide login form. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '200':
+         description: 'Ok. Show Log-in UI'
+   post:
+     operationId: R102
+     summary: 'R102: Login Action'
+     description: 'Processes the login form submission. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+
+     requestBody:
+       required: true
+       content:
+         application/x-www-form-urlencoded:
+           schema:
+             type: object
+             properties:
+               email:          # <!--- form field name
+                 type: string
+               password:    # <!--- form field name
+                 type: string
+             required:
+                  - email
+                  - password
+
+     responses:
+       '302':
+         description: 'Redirect after processing the login credentials.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful authentication. Redirect to user profile.'
+                 value: '/users/{id}'
+               302Error:
+                 description: 'Failed authentication. Redirect to login form.'
+                 value: '/login'
+
+ /logout:
+
+   post:
+     operationId: R103
+     summary: 'R103: Logout Action'
+     description: 'Logout the current authenticated user. Access: USR, ADM'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '302':
+         description: 'Redirect after processing logout.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful logout. Redirect to login form.'
+                 value: '/login'
+
+ /register:
+   get:
+     operationId: R104
+     summary: 'R104: Register Form'
+     description: 'Provide new user registration form. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '200':
+         description: 'Ok. Show Sign-Up UI'
+
+   post:
+     operationId: R105
+     summary: 'R105: Register Action'
+     description: 'Processes the new user registration form submission. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+
+     requestBody:
+       required: true
+       content:
+         application/x-www-form-urlencoded:
+           schema:
+             type: object
+             properties:
+               name:
+                 type: string
+               email:
+                 type: string
+               picture:
+                 type: string
+                 format: binary
+             required:
+                  - email
+                  - password
+
+     responses:
+       '302':
+         description: 'Redirect after processing the new user information.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful authentication. Redirect to user profile.'
+                 value: '/users/{id}'
+               302Failure:
+                 description: 'Failed authentication. Redirect to login form.'
+                 value: '/login'
+
+ /users/{id}:
+   get:
+     operationId: R106
+     summary: 'R106: View user profile'
+     description: 'Show the individual user profile. Access: USR'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+
+     parameters:
+       - in: path
+         name: id
+         schema:
+           type: integer
+         required: true
+
+     responses:
+       '200':
+         description: 'Ok. Show User Profile UI'
+ 
+
+ /api/posts:
+   get:
+     operationId: R202
+     summary: 'R202: Search Posts API'
+     description: 'Searches for posts and returns the results as JSON. Access: PUB.'
+
+     tags:
+       - 'M02: Posts'
+
+     parameters:
+       - in: query
+         name: query
+         description: String to use for full-text search
+         schema:
+           type: string
+         required: false
+       - in: query
+         name: title
+         description: Category of the posts
+         schema:
+           type: string
+         required: false
+       - in: query
+         name: description
+         description: Description of the post
+         schema:
+           type: string
+         required: false
+       - in: query
+         name: owner_id
+         description: Integer with the post's owner_id
+         schema:
+           type: integer
+         required: false
+
+     responses:
+       '200':
+         description: Success
+         content:
+           application/json:
+             schema:
+               type: array
+               items:
+                 type: object
+                 properties:
+                   post_id:
+                     type: integer
+                   title:
+                     type: string
+                   date:
+                     type: integer
+                   votes:
+                     type: integer
+                   description:
+                     type: string
+                   type:
+                     type: string
+                   tag_id:
+                     type: integer
+                   author_id:
+                     type: integer
+               example:
+                 - post_id: 1
+                   title: Some player scores a goal
+                   date: 1638524417
+                   votes: 108
+                   description: This player scored a goal against this team in this game
+                   type: Video
+                   tag_id: 2
+                   author_id: 1092
+                 - post_id: 2011
+                   title: Team wins the tournament
+                   date: 1626522319
+                   votes: 89
+                   description: Team wins a close tournament against Team 2
+                   type: News Article
+                   tag_id: 7
+                   author_id: 347
